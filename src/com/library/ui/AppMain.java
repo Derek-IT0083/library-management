@@ -1,6 +1,21 @@
 package com.library.ui;
 
+import com.library.dao.BookDAO;
+import com.library.dao.LoanDAO;
+import com.library.dao.MemberDAO;
+
 public class AppMain {
+
+    private final BookDAO bookDao;
+    private final MemberDAO memberDao;
+    private final LoanDAO loanDao;  
+
+    public AppMain() {
+        this.bookDao = new BookDAO();
+        this.memberDao = new MemberDAO();
+        this.loanDao = new LoanDAO();
+    }
+    
     public static void main(String[] args) {
         new AppMain().run();
     }
@@ -12,7 +27,7 @@ public class AppMain {
             switch (InputHandler.input("請選擇")) {
                 case "1" -> new BookMenu().bookMenu();
                 case "2" -> new MemberMenu().memberMenu();
-                case "3" ->   System.out.println("To Do ....");
+                case "3" -> new LoanMenu(this.bookDao, this.memberDao, this.loanDao).loanMenu();
                 case "4" ->   System.out.println("To Do ....");
                 case "0" -> {
                     System.out.println("再見！");

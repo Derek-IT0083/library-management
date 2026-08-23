@@ -8,6 +8,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,24 @@ public class BookDAO {
                 INSERT INTO books
                     (isbn, title, author, type, total_copies, available_copies)
                 VALUES (?, ?, ?, ?, ?, ?)""";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql,
+                     Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, book.getIsbn());
+            ps.setString(2, book.getTitle());
+            ps.setString(3, book.getAuthor());
+            ps.setString(4, book.getType().name());
+            ps.setInt(5, book.getTotalCopies());
+            ps.setInt(6, book.getAvailableCopies());
+            ps.executeUpdate();
+            try (ResultSet keys = ps.getGeneratedKeys()) {
+                if (keys.next()) {
+                    book.setId(keys.getLong(1));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("新增藏書失敗", e);
+        }        
     }
 
     /** 依主鍵查詢。 */
@@ -46,7 +65,15 @@ public class BookDAO {
     /** 依 ISBN 查詢（用於重複檢查）。 */
     public Optional<Book> findByIsbn(String isbn) {
         String sql = "SELECT * FROM books WHERE isbn = ?";
-        return null;
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, isbn);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next() ? Optional.of(mapRow(rs)) : Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("查詢藏書失敗", e);
+        }
     }
 
     /** 全部藏書，依書名排序。 */

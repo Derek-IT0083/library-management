@@ -31,7 +31,7 @@ public class BookMenu {
                 case "1" -> addBook();
                 case "2" -> findBookByIsbn();
                 case "3" -> listBooks();
-                case "4" -> System.out.println("To Do ....");
+                case "4" -> searchBooks();
                 case "9" -> {
                     return;
                 }
@@ -64,6 +64,14 @@ public class BookMenu {
 
     private void listBooks() {
         printBookList(bookService.listAll());
+    }
+
+    private void searchBooks() {
+        System.out.println("（直接按 Enter 代表該條件不限）");
+        String title = InputHandler.inputOptional("書名關鍵字");
+        String author = InputHandler.inputOptional("作者關鍵字");
+        BookType type = InputHandler.inputOptionalBookType();
+        printBookList(bookService.search(title, author, type));
     }
 
     
