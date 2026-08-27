@@ -1,8 +1,6 @@
 package com.library.ui;
 
 import java.util.List;
-
-import com.library.dao.BookDAO;
 import com.library.exception.LibraryException;
 import com.library.model.Book;
 import com.library.model.BookType;
@@ -12,9 +10,8 @@ public class BookMenu {
 
     private final BookService bookService;
 
-    public BookMenu() {
-         BookDAO bookDao = new BookDAO();
-         this.bookService = new BookService(bookDao);
+    public BookMenu(BookService bookService) {
+         this.bookService = bookService;
     }
 
     public void bookMenu() {

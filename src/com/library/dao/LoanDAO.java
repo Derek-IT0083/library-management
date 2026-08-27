@@ -2,8 +2,11 @@ package com.library.dao;
 
 import com.library.exception.DataAccessException;
 import com.library.model.Loan;
-import java.math.BigDecimal;
+import com.library.model.MemberRankingRow;
+import com.library.model.MemberType;
+import com.library.model.OverdueReportRow;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -122,6 +125,68 @@ public class LoanDAO {
             return list;
         } catch (SQLException e) {
             throw new DataAccessException("列出借閱紀錄失敗", e);
+        }
+    }
+
+    // ── 報表查詢（F6）────────────────────────────────────────
+
+    /** 逾期借閱清單，按逾期天數由多到少排序。 */
+    public List<OverdueReportRow> overdueReport() {
+        String sql = """
+                SELECT m.name AS member_name,
+                       b.title AS book_title,
+                       l.due_date AS due_date,
+                       DATEDIFF(CURDATE(), l.due_date) AS overdue_days
+                FROM loans l
+                JOIN books b   ON b.id = l.book_id
+                JOIN members m ON m.id = l.member_id
+                WHERE l.return_date IS NULL
+                  AND l.due_date < CURDATE()
+                ORDER BY overdue_days DESC""";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            List<OverdueReportRow> list = new ArrayList<>();
+            while (rs.next()) {
+                list.add(new OverdueReportRow(
+                        rs.getString("member_name"),
+                        rs.getString("book_title"),
+                        rs.getDate("due_date").toLocalDate().toString(),
+                        rs.getLong("overdue_days")));
+            }
+            return list;
+        } catch (SQLException e) {
+            throw new DataAccessException("產生逾期報表失敗", e);
+        }
+    }
+
+    /** 會員借閱排行（借閱總次數），取前 N 名。 */
+    public List<MemberRankingRow> memberRanking(int limit) {
+        String sql = """
+                SELECT m.name AS member_name,
+                       m.type AS member_type,
+                       COUNT(*) AS loan_count
+                FROM loans l
+                JOIN members m ON m.id = l.member_id
+                GROUP BY m.id, m.name, m.type
+                ORDER BY loan_count DESC
+                LIMIT ?""";
+        try (Connection conn = DBUtil.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                List<MemberRankingRow> list = new ArrayList<>();
+                while (rs.next()) {
+                    MemberType type = MemberType.valueOf(rs.getString("member_type"));
+                    list.add(new MemberRankingRow(
+                            rs.getString("member_name"),
+                            type.label(),
+                            rs.getLong("loan_count")));
+                }
+                return list;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("產生借閱排行失敗", e);
         }
     }
 

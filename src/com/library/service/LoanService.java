@@ -10,6 +10,8 @@ import com.library.exception.OverdueBlockException;
 import com.library.model.Book;
 import com.library.model.Loan;
 import com.library.model.Member;
+import com.library.model.MemberRankingRow;
+import com.library.model.OverdueReportRow;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -103,6 +105,16 @@ public class LoanService {
     /** 全部未歸還的借閱紀錄。 */
     public List<Loan> listActiveLoans() {
         return loanDao.findAllActive();
+    }
+
+    /** 逾期借閱清單（F6），按逾期天數排序。 */
+    public List<OverdueReportRow> overdueReport() {
+        return loanDao.overdueReport();
+    }
+
+    /** 會員借閱排行（F6），預設前 10 名。 */
+    public List<MemberRankingRow> memberRanking() {
+        return loanDao.memberRanking(10);
     }
 
 }

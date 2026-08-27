@@ -3,18 +3,14 @@ package com.library.ui;
 import com.library.service.LoanService;
 import com.library.service.ReturnResult;
 import java.util.List;
-
-import com.library.dao.BookDAO;
-import com.library.dao.LoanDAO;
-import com.library.dao.MemberDAO;
 import com.library.exception.LibraryException;
 import com.library.model.Loan;
 
 public class LoanMenu {
     private final LoanService loanService;
 
-    public LoanMenu(BookDAO bookDao, MemberDAO memberDao, LoanDAO loanDao) {
-        this.loanService = new LoanService(bookDao, memberDao, loanDao);
+    public LoanMenu(LoanService loanService) {
+        this.loanService = loanService;
     }
 
     // ── 借閱管理（F3 / F4）───────────────────────────────────

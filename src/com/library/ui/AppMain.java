@@ -3,17 +3,20 @@ package com.library.ui;
 import com.library.dao.BookDAO;
 import com.library.dao.LoanDAO;
 import com.library.dao.MemberDAO;
+import com.library.service.BookService;
+import com.library.service.LoanService;
+import com.library.service.MemberService;
 
 public class AppMain {
 
-    private final BookDAO bookDao;
-    private final MemberDAO memberDao;
-    private final LoanDAO loanDao;  
+    private final BookService bookService;
+    private final MemberService memberService;
+    private final LoanService loanService; 
 
     public AppMain() {
-        this.bookDao = new BookDAO();
-        this.memberDao = new MemberDAO();
-        this.loanDao = new LoanDAO();
+        this.bookService = new BookService(new BookDAO());
+        this.memberService = new MemberService(new MemberDAO());
+        this.loanService = new LoanService(new BookDAO(), new MemberDAO(), new LoanDAO());
     }
     
     public static void main(String[] args) {
@@ -25,10 +28,10 @@ public class AppMain {
         while (true) {
             printMainMenu();
             switch (InputHandler.input("請選擇")) {
-                case "1" -> new BookMenu().bookMenu();
-                case "2" -> new MemberMenu().memberMenu();
-                case "3" -> new LoanMenu(this.bookDao, this.memberDao, this.loanDao).loanMenu();
-                case "4" ->   System.out.println("To Do ....");
+                case "1" -> new BookMenu(this.bookService).bookMenu();
+                case "2" -> new MemberMenu(this.memberService).memberMenu();
+                case "3" -> new LoanMenu(this.loanService).loanMenu();
+                case "4" -> new ReportMenu(this.loanService).reportMenu();
                 case "0" -> {
                     System.out.println("再見！");
                     return;
