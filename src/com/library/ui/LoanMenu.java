@@ -3,6 +3,8 @@ package com.library.ui;
 import com.library.service.LoanService;
 import com.library.service.ReturnResult;
 import java.util.List;
+
+import com.library.exception.CancelException;
 import com.library.exception.LibraryException;
 import com.library.model.Loan;
 
@@ -43,6 +45,8 @@ public class LoanMenu {
             Loan loan = loanService.borrow(bookId, memberId);
             System.out.printf("✔ 借閱成功：借閱單 #%d，應還日 %s%n",
                     loan.getId(), loan.getDueDate());
+        } catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
         } catch (LibraryException | IllegalArgumentException e) {
             System.out.println("✘ " + e.getMessage());
         }
@@ -58,6 +62,8 @@ public class LoanMenu {
             } else {
                 System.out.println("✔ 還書完成：準時歸還，無罰金");
             }
+        } catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
         } catch (LibraryException | IllegalArgumentException e) {
             System.out.println("✘ " + e.getMessage());
         }

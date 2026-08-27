@@ -3,6 +3,7 @@ package com.library.ui;
 import java.util.Scanner;
 import com.library.model.BookType;
 import com.library.model.MemberType;
+import com.library.exception.CancelException;
 
 public class InputHandler {
 
@@ -11,9 +12,21 @@ public class InputHandler {
     // ── 輸入輔助 ─────────────────────────────────────────────
     // 一律以 nextLine() 讀整行再自行轉型，避免 nextInt() 殘留換行的陷阱。
 
+    // ── 1. 一般輸入（主選單專用，不拋出 CancelException） ────────
     public static String input(String label) {
         System.out.print(label + "：");
         return in.nextLine().trim();
+    }
+
+
+    // ── 2. 支援取消的輸入（子功能填表單專用，輸入 9 會拋出例外） ────────
+    public static String inputOrCancel(String label) {
+        System.out.print(label + " ：");
+        String value = in.nextLine().trim();
+        if (value.equals("9")) {
+            throw new CancelException();
+        }
+        return value;
     }
 
     /** 允許空白的輸入，回傳 null 代表未填。 */
@@ -34,7 +47,7 @@ public class InputHandler {
 
     public static BookType inputBookType() {
         while (true) {
-            String s = input("類型 (1)紙本 (2)電子 (3)有聲");
+            String s = inputOrCancel("類型 (1)紙本 (2)電子 (3)有聲");
             switch (s) {
                 case "1":
                     return BookType.PAPER;
@@ -60,7 +73,7 @@ public class InputHandler {
 
     public static MemberType inputMemberType() {
         while (true) {
-            String s = input("身份 (1)學生 (2)教職員");
+            String s = inputOrCancel("身份 (1)學生 (2)教職員");
             switch (s) {
                 case "1":
                     return MemberType.STUDENT;

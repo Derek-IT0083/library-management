@@ -1,5 +1,6 @@
 package com.library.ui;
 
+import com.library.exception.CancelException;
 import com.library.exception.LibraryException;
 import com.library.model.MemberType;
 import com.library.service.MemberService;
@@ -42,16 +43,22 @@ public class MemberMenu {
             String email = InputHandler.inputOptional("電子郵件");
             Member member = memberService.addMember(new Member(no, name, type, email));
             System.out.printf("✔ 新增成功：%s（%s）%n", member.getName(), type.label());
+        } catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
         } catch (LibraryException | IllegalArgumentException e) {
             System.out.println("✘ " + e.getMessage());
         }
     }
 
     private void findMember() {
-        String no = InputHandler.input("會員編號");
-        memberService.findByMemberNo(no).ifPresentOrElse(
+        try {       
+            String no = InputHandler.input("會員編號");
+            memberService.findByMemberNo(no).ifPresentOrElse(
                 m -> System.out.println("  " + m),
-                () -> System.out.println("查無此會員"));
+                () -> System.out.println("查無此會員"));    
+         }catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
+         }
     }
 
 }

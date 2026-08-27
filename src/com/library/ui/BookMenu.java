@@ -1,6 +1,7 @@
 package com.library.ui;
 
 import java.util.List;
+import com.library.exception.CancelException;
 import com.library.exception.LibraryException;
 import com.library.model.Book;
 import com.library.model.BookType;
@@ -47,16 +48,22 @@ public class BookMenu {
             Book book = bookService.addBook(new Book(isbn, title, author, type, copies));
             System.out.printf("✔ 新增成功：%s（%s，共 %d 份）%n",
                     book.getTitle(), type.label(), copies);
+        } catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
         } catch (LibraryException | IllegalArgumentException e) {
             System.out.println("✘ " + e.getMessage());
         }
     }
 
     private void findBookByIsbn() {
-        String isbn = InputHandler.input("ISBN");
-        bookService.findByIsbn(isbn).ifPresentOrElse(
-                b -> System.out.println("  " + b),
+        try{        
+            String isbn = InputHandler.input("ISBN");        
+            bookService.findByIsbn(isbn).ifPresentOrElse(          
+                b -> System.out.println("  " + b),          
                 () -> System.out.println("查無此書"));
+        }catch (CancelException e) {
+            System.out.println("\n✘ " + e.getMessage() + "，返回上層。");
+        }
     }
 
     private void listBooks() {
