@@ -23,7 +23,7 @@ public class InputHandler {
     public static String inputOrCancel(String label) {
         System.out.print(label + " ：");
         String value = in.nextLine().trim();
-        if (value.equals("9")) {
+        if (value.equals("q")) {
             throw new CancelException();
         }
         return value;

@@ -3,6 +3,7 @@ package com.library.ui;
 import com.library.dao.BookDAO;
 import com.library.dao.LoanDAO;
 import com.library.dao.MemberDAO;
+import com.library.dao.ReservationDAO;
 import com.library.service.BookService;
 import com.library.service.LoanService;
 import com.library.service.MemberService;
@@ -16,7 +17,7 @@ public class AppMain {
     public AppMain() {
         this.bookService = new BookService(new BookDAO());
         this.memberService = new MemberService(new MemberDAO());
-        this.loanService = new LoanService(new BookDAO(), new MemberDAO(), new LoanDAO());
+        this.loanService = new LoanService(new BookDAO(), new MemberDAO(), new LoanDAO(), new ReservationDAO());
     }
     
     public static void main(String[] args) {

@@ -3,10 +3,14 @@ package com.library.service;
 import com.library.dao.BookDAO;
 import com.library.dao.LoanDAO;
 import com.library.dao.MemberDAO;
+import com.library.dao.ReservationDAO;
+
 import com.library.exception.BookNotAvailableException;
 import com.library.exception.BorrowLimitExceededException;
 import com.library.exception.EntityNotFoundException;
+import com.library.exception.LibraryException;
 import com.library.exception.OverdueBlockException;
+
 import com.library.model.Book;
 import com.library.model.Loan;
 import com.library.model.Member;
@@ -27,11 +31,13 @@ public class LoanService {
     private final BookDAO bookDao;
     private final MemberDAO memberDao;
     private final LoanDAO loanDao;
+    private final ReservationDAO reservationDao;
 
-    public LoanService(BookDAO bookDao, MemberDAO memberDao, LoanDAO loanDao) {
+    public LoanService(BookDAO bookDao, MemberDAO memberDao, LoanDAO loanDao, ReservationDAO reservationDao) {
         this.bookDao = bookDao;
         this.memberDao = memberDao;
         this.loanDao = loanDao;
+        this.reservationDao = reservationDao;
     }
 
     /**
@@ -70,6 +76,51 @@ public class LoanService {
             bookDao.decrementAvailable(bookId);
         }
         return loan;
+    }
+
+    // ── 新增：書籍續借 (Renew) ────────────────────────
+    public void renewLoan(long loanId) {
+        // 1. 檢查該筆借閱是否存在且未歸還
+        Loan loan = loanDao.findActiveById(loanId)
+                .orElseThrow(() -> new EntityNotFoundException("找不到未歸還的借閱紀錄 id=" + loanId));
+        
+        // 2. 商業邏輯檢查（例如：是否逾期？是否已被別人預約？）
+        if (loan.overdueDays(LocalDate.now()) > 0) {
+            throw new LibraryException("續借失敗：該書籍已逾期，無法續借。");
+        }
+
+        // 3. 執行延長到期日 (例如延長 14 天)
+        LocalDate newDueDate = loan.getDueDate().plusDays(14);
+        loan.setDueDate(newDueDate);
+        loanDao.update(loan);
+    }
+
+    // ── 新增：預約借書 (Reserve) ───────────────────────
+    public void reserve(long bookId, long memberId) {
+        // 1. 檢查書本與會員是否存在
+        Book book = bookDao.findById(bookId)
+                .orElseThrow(() -> new EntityNotFoundException("找不到書籍 id=" + bookId));
+        Member member = memberDao.findById(memberId)
+                .orElseThrow(() -> new EntityNotFoundException("找不到會員 id=" + memberId));
+
+        // 2. 透過 ReservationDAO 寫入資料庫
+        boolean success = reservationDao.createReservation(memberId, bookId, LocalDate.now());
+        if (!success) {
+            throw new LibraryException("預約失敗：可能重複預約或資料庫寫入錯誤。");
+        }
+
+        // 檢查 1：常見的商業邏輯防呆
+        if (!book.hasAvailableCopy()) {    
+            throw new LibraryException("預約失敗：該書籍目前已借閱無庫存。");
+        }
+        // 檢查 2：同時借書上限
+        if (loanDao.countActiveByMember(memberId) >= member.borrowLimit()) {
+            throw new BorrowLimitExceededException(member);
+        }
+        // 檢查 3：逾期封鎖
+        if (loanDao.hasOverdue(memberId)) {
+            throw new OverdueBlockException(member);
+        }
     }
 
     /**
