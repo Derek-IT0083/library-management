@@ -38,5 +38,6 @@ public class DBUtil {
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(url, user, password);
     }
-  
+
+    
 }
